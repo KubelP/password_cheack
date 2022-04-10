@@ -15,7 +15,7 @@ class API:
         self.return_hashes = ''
         self.hashed_password = sha1(self.password_to_hash.encode('utf-8'))
         self.hashed = self.hashed_password.hexdigest()
-        self.hashed_password_part = self.hashed[:5]
+        self.hashed_password_part = self.hashed[:5].upper()
         self.url_with_hash = self.url + self.hashed_password_part
 
     def leacked_password_checking(self):
@@ -23,10 +23,17 @@ class API:
          returnes values form API and returns file password_git.txt'''
 
         with get(self.url_with_hash) as cheched_with_api:
-            self.return_hashes = cheched_with_api.text
+            self.return_hashes = cheched_with_api.text.splitlines()
 
         for return_hash in self.return_hashes:
-            if self.hashed_password_part.upper() not in return_hash:
-                with open('password_git.txt', mode = 'a', encoding = 'utf-8') as password_git:
-                    password_git.write(self.password_to_hash)
-                break
+            return_hashes_split, _ = return_hash.split(':')
+            if self.hashed.upper()[5:] == return_hashes_split:
+                return False
+        return True
+
+    def git_password_added(self):
+        if API.leacked_password_checking(self) is False:
+            print('password leaked')
+        else:
+            with open('password_ok.txt', mode = 'a', encoding = 'utf-8') as password_git:
+                password_git.write(self.password_to_hash)
